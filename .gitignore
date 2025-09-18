@@ -61,3 +61,4 @@ test_results/
 # Temporary files
 *.tmp
 *.temp
+contracts/
