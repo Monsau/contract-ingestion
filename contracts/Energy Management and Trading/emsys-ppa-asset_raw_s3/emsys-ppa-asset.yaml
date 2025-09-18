@@ -1,0 +1,199 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: b60c0205-eb29-4e29-93c5-4848f77b5916
+name: Asset Sharp Production Forecasts Sourcing Contract for Assets
+version: 1.0.0
+status: active
+domain: Asset Management
+dataProduct: emsys_ppa_asset
+description:
+  purpose: enables efficient trading of renewable energy assets, reduces imbalance
+    costs, and ensures data quality and availability
+  limitations: Data does not include real-time
+  usage: day-ahead and intraday trading
+tenant: ClimateQuantumInc
+team:
+- username: davit.pogosian@enovos.eu
+  role: data_steward
+  dateIn: 2025-03-01
+- username: jesu.balan@enovos.eu
+  role: data_reliability_engineer
+  dateIn: 2025-03-01
+roles:
+- role: data_owner
+  access: write
+  firstLevelApprovers: Reporting Manager
+  name: role_1
+- role: data_steward
+  access: write
+  firstLevelApprovers: Reporting Manager
+  name: role_2
+- role: data_analyst
+  access: read
+  firstLevelApprovers: Reporting Manager
+  name: role_3
+- role: data_scientist
+  access: read
+  firstLevelApprovers: Reporting Manager
+  name: role_4
+- role: data_architect
+  access: read
+  firstLevelApprovers: Reporting Manager
+  name: role_5
+- role: data_engineer
+  access: read
+  firstLevelApprovers: Reporting Manager
+  secondLevelApprovers: data_engineer
+  name: role_6
+- role: data_reliability_engineer
+  access: read
+  firstLevelApprovers: Reporting Manager
+  name: role_7
+servers:
+- server: eventsStorage
+  type: s3
+  format: json
+  delimiter: array
+  location: s3://eno-dm-bronze-prd/emsys/assets/2025/*/*/*.json
+  description: S3 storage service for event records
+  environment: prod
+- server: eventsStorage-uat
+  type: s3
+  format: json
+  delimiter: array
+  location: s3://eno-dm-bronze-uat/emsys/assets/2025/*/*/*.json
+  description: S3 storage service for event records
+  environment: uat
+schema:
+- name: entities
+  businessName: basedata
+  physicalType: array
+  description: Provides basedata of assets
+  response_type: json
+  fetch_frequency: daily
+  fetch_strategy: overwrite
+  undeclared_properties_found: ignore
+  properties:
+  - name: id
+    required: true
+    primaryKey: true
+    primaryKeyPosition: 1
+    logicalType: string
+    physicalType: uuid
+    logicalTypeOptions:
+      minLength: 36
+      maxLength: 36
+      pattern: ^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$
+    description: Unique identifier for the portfolio control area (UUID).
+    examples:
+    - fb6090f3-cf3e-4d5e-a3f0-084e672b101d
+  - name: name
+    required: true
+    logicalType: string
+    description: Name of the portfolio control area.
+    examples:
+    - LU PV2/CREOS
+  - name: customer_id
+    logicalType: string
+    description: Internal customer or portfolio identifier for this control area.
+    examples:
+    - LU PV2/CREOS
+    - PV-Heintz Van Landwyck
+    - PV-Goodyear-Moldplant
+  - name: entity_type
+    required: true
+    logicalType: string
+    description: Asset type indicator
+    examples:
+    - solar-farm
+    - wind-turbine
+  - name: installed_capacity_pos
+    logicalType: number
+    physicalType: decimal
+    description: Installed positive generation capacity of the solar farm (e.g., kW).
+    examples:
+    - 868.8
+  - name: installed_capacity_neg
+    logicalType: number
+    physicalType: decimal
+    description: Installed negative capacity (consumption capacity) of the solar farm
+      (typically 0 for solar).
+    examples:
+    - 0.0
+  - name: contract_number
+    logicalType: string
+    required: false
+    description: Contract number associated with the solar farm (if any).
+    examples:
+    - ''
+  - name: location
+    logicalType: object
+    description: Physical location details of the solar farm.
+    properties:
+    - name: geo_coordinate
+      logicalType: object
+      properties:
+      - name: latitude
+        logicalType: number
+        physicalType: decimal
+        description: Latitude of the asset location.
+      - name: longitude
+        logicalType: number
+        physicalType: decimal
+        description: Longitude of the asset location.
+    - name: postal_code
+      logicalType: string
+      required: false
+      description: Postal code for the asset's location.
+    examples:
+    - geo_coordinate:
+        latitude: 49.510651
+        longitude: 6.300573
+      postal_code: L-5691
+    classification: public
+    quality:
+    - rule: nullCheck
+      description: required column should not contain null values
+      dimension: completeness
+      severity: error
+      businessImpact: operational
+      schedule: before data overwrite
+    - rule: valueCheck
+      description: column should not contain incorrect values
+      dimension: accuracy
+      severity: error
+      businessImpact: operational
+      schedule: before data overwrite
+      customProperties:
+      - property: installed_capacity_pos
+        value: Greater than 0
+      - property: installed_capacity_neg
+        value: Greater than 0
+      - property: latitude
+        value: existing latitude
+      - property: longitude
+        value: existing longitude
+      - property: postal_code
+        value: existing postal_code
+  type: table
+slaProperties:
+- property: generalAvailability
+  value: '2032-05-12T09:30:10-08:00'
+- property: endOfSupport
+  value: '2032-05-12T09:30:10-08:00'
+- property: endOfLife
+  value: '2042-05-12T09:30:10-08:00'
+- property: retention
+  value: 5
+  unit: y
+- property: latency
+  value: 30
+  unit: s
+  environment: production
+- property: timeOfAvailability
+  value: 00:00-00:00
+  environment: production
+tags:
+- Asset
+contractCreatedTs: '2025-02-10T12:59:43+00:00'
+type: table

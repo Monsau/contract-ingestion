@@ -1,0 +1,329 @@
+# 🏗️ Complete Configuration Example
+# Copy this to ingestion-generic.yaml and customize for your environment
+
+# =============================================================================
+# OPENMETADATA CONNECTION CONFIGURATION
+# =============================================================================
+openmetadata:
+  host: "localhost"                          # OpenMetadata server hostname
+  port: 8585                                 # OpenMetadata server port
+  protocol: "http"                           # http or https
+  jwt_token: "${OPENMETADATA_JWT_TOKEN}"     # JWT token from environment variable
+
+# =============================================================================
+# ENVIRONMENT-SPECIFIC OVERRIDES
+# =============================================================================
+environments:
+  dev:
+    openmetadata:
+      host: "dev-openmetadata.company.com"
+      protocol: "https"
+  uat:
+    openmetadata:
+      host: "uat-openmetadata.company.com"
+      protocol: "https"
+  prod:
+    openmetadata:
+      host: "prod-openmetadata.company.com"
+      protocol: "https"
+
+# =============================================================================
+# SOURCE DATA CONFIGURATION
+# =============================================================================
+source:
+  contracts_directory: "contracts"           # Directory containing contract YAML files
+  target_environment: "dev"                  # Target environment: dev, uat, prod
+
+# =============================================================================
+# DOMAIN ARCHITECTURE
+# =============================================================================
+domain:
+  root_name: "DataManagement"                # Root domain identifier (no spaces)
+  root_display: "Data Management Domain"     # Root domain display name
+
+# =============================================================================
+# DATABASE SERVICE CONFIGURATION
+# =============================================================================
+service:
+  name: "DataLake"                          # Service identifier
+  display: "Enterprise Data Lake"           # Service display name
+  description: "S3-based data lake for analytics and reporting"
+
+# =============================================================================
+# DATABASE STRUCTURE
+# =============================================================================
+database_structure:
+  database_name: "contract_data"            # Base database name
+  naming_pattern: "contract_data_{domain}"  # Pattern for domain-specific databases
+
+# =============================================================================
+# TAG CLASSIFICATION SYSTEM
+# =============================================================================
+tags:
+  categories:
+    # Data Quality Classification
+    data_quality:
+      name: "Data Quality"
+      description: "Data quality and maturity levels"
+      tags:
+        bronze:
+          name: "Bronze"
+          description: "Raw data layer - unprocessed data from source systems"
+        silver:
+          name: "Silver"
+          description: "Cleaned and validated data layer"
+        gold:
+          name: "Gold"
+          description: "Business-ready data layer with applied business rules"
+        validated:
+          name: "Validated"
+          description: "Data that has passed quality validation checks"
+        pending:
+          name: "Pending"
+          description: "Data awaiting quality validation"
+        issues:
+          name: "Issues"
+          description: "Data with identified quality issues"
+    
+    # Business Domain Classification
+    business_domain:
+      name: "Business Domain"
+      description: "Business domain and functional area classifications"
+      tags:
+        asset:
+          name: "Asset"
+          description: "Asset management and portfolio data"
+        vehicle:
+          name: "Vehicle"
+          description: "Electric vehicle data and telemetry"
+        inverter:
+          name: "Inverter"
+          description: "Solar inverter data and monitoring"
+        volume:
+          name: "Volume"
+          description: "Volume and capacity planning data"
+        forecast:
+          name: "forecast"
+          description: "Forecasting and prediction data"
+        analytics:
+          name: "Analytics"
+          description: "Analytics and reporting data"
+        monitoring:
+          name: "Monitoring"
+          description: "System monitoring and observability data"
+    
+    # Certification Level Classification
+    certification_level:
+      name: "Certification Level"
+      description: "Data certification and approval status"
+      tags:
+        certified:
+          name: "Certified"
+          description: "Officially certified for production use"
+        pending:
+          name: "Pending"
+          description: "Awaiting certification approval"
+        deprecated:
+          name: "Deprecated"
+          description: "Deprecated - scheduled for removal"
+        experimental:
+          name: "Experimental"
+          description: "Experimental data - use with caution"
+
+# =============================================================================
+# TEAM AND OWNERSHIP CONFIGURATION
+# =============================================================================
+teams:
+  # Default team for fallback ownership
+  default_team:
+    name: "data_engineering"
+    display: "Data Engineering Team"
+    description: "Core data engineering team responsible for data infrastructure"
+    team_type: "Group"                      # Must be "Group" to own entities
+  
+  # Additional specialized teams
+  additional_teams:
+    platform_engineering:
+      name: "platform_engineering"
+      display: "Platform Engineering"
+      description: "Platform and infrastructure engineering team"
+      team_type: "Group"
+    
+    data_analytics:
+      name: "data_analytics"
+      display: "Data Analytics Team"
+      description: "Data analytics and business intelligence team"
+      team_type: "Group"
+    
+    data_governance:
+      name: "data_governance"
+      display: "Data Governance Team"
+      description: "Data governance, quality, and compliance team"
+      team_type: "Group"
+
+# =============================================================================
+# USER MANAGEMENT
+# =============================================================================
+users:
+  default_users:
+    data_engineer:
+      name: "data_engineer"
+      display: "Data Engineer"
+      email: "data.engineer@company.com"
+      roles: ["DataEngineer", "DataConsumer"]
+    
+    platform_engineer:
+      name: "platform_engineer"
+      display: "Platform Engineer"
+      email: "platform.engineer@company.com"
+      roles: ["DataEngineer", "Admin"]
+    
+    data_analyst:
+      name: "data_analyst"
+      display: "Data Analyst"
+      email: "data.analyst@company.com"
+      roles: ["DataConsumer", "DataSteward"]
+
+# =============================================================================
+# CLOUD PROVIDER CONFIGURATION
+# =============================================================================
+cloud:
+  provider: "aws"                           # aws, azure, or gcp
+  
+  # AWS Configuration
+  aws:
+    access_key_id: "${AWS_ACCESS_KEY_ID}"
+    secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+    session_token: "${AWS_SESSION_TOKEN}"   # Optional for temporary credentials
+    region: "eu-west-1"                     # Default AWS region
+    
+    # S3 Configuration
+    s3:
+      bronze_bucket_pattern: "eno-dm-bronze-{environment}"
+      silver_bucket_pattern: "eno-dm-silver-{environment}"
+      gold_bucket_pattern: "eno-dm-gold-{environment}"
+  
+  # Azure Configuration (placeholder)
+  azure:
+    subscription_id: "${AZURE_SUBSCRIPTION_ID}"
+    client_id: "${AZURE_CLIENT_ID}"
+    client_secret: "${AZURE_CLIENT_SECRET}"
+    tenant_id: "${AZURE_TENANT_ID}"
+  
+  # GCP Configuration (placeholder)
+  gcp:
+    project_id: "${GCP_PROJECT_ID}"
+    service_account_path: "${GCP_SERVICE_ACCOUNT_PATH}"
+
+# =============================================================================
+# TESTING AND QUALITY CONFIGURATION
+# =============================================================================
+testing:
+  # Test suite configuration
+  test_suite:
+    name: "contract_data_quality_tests"
+    display: "Contract Data Quality Test Suite"
+    description: "Comprehensive data quality tests for contract-based data"
+  
+  # Default test cases to create for each table
+  default_test_cases:
+    - type: "tableRowCountToEqual"
+      name: "row_count_validation"
+      description: "Validate table has expected row count"
+      parameters:
+        min_value: 1
+        max_value: 1000000
+    
+    - type: "tableFreshnessToBeWithin"
+      name: "freshness_validation"
+      description: "Validate data freshness"
+      parameters:
+        max_age: "24h"
+    
+    - type: "columnValuesToNotBeNull"
+      name: "critical_columns_not_null"
+      description: "Ensure critical columns are not null"
+      # Note: columnName parameter will be set dynamically based on schema
+
+# =============================================================================
+# RETENTION POLICY CONFIGURATION
+# =============================================================================
+retention:
+  # Default retention periods by data quality tier
+  default_periods:
+    bronze: 365                             # Days to retain bronze data
+    silver: 1095                            # Days to retain silver data (3 years)
+    gold: 2555                              # Days to retain gold data (7 years)
+  
+  # Domain-specific retention overrides
+  domain_overrides:
+    asset_management: 2555                  # Asset data kept for 7 years
+    vehicle_telemetry: 1095                 # Vehicle data kept for 3 years
+    monitoring: 90                          # Monitoring data kept for 90 days
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+logging:
+  level: "INFO"                             # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging configuration
+  file_logging:
+    enabled: true
+    filename: "logs/ingestion_{timestamp}.log"
+    max_size_mb: 100
+    backup_count: 5
+
+# =============================================================================
+# ADVANCED FEATURES
+# =============================================================================
+features:
+  # Enable/disable specific features
+  sample_data_fetching: true                # Fetch real sample data from S3
+  test_case_creation: true                  # Create automated test cases
+  incident_management: true                 # Create incidents for failed tests
+  data_product_creation: true               # Create data products
+  lineage_tracking: false                   # Track data lineage (future feature)
+  profiling: false                          # Enable data profiling (future feature)
+  
+  # SDK vs API preferences
+  prefer_sdk: true                          # Try SDK first, fallback to API
+  api_fallback: true                        # Enable API fallback when SDK fails
+
+# =============================================================================
+# PERFORMANCE TUNING
+# =============================================================================
+performance:
+  # Batch processing configuration
+  batch_size: 50                            # Number of entities to process in batch
+  parallel_processing: false                # Enable parallel processing (experimental)
+  request_timeout: 30                       # API request timeout in seconds
+  retry_attempts: 3                         # Number of retry attempts for failed requests
+  retry_delay: 5                            # Delay between retries in seconds
+
+# =============================================================================
+# VALIDATION RULES
+# =============================================================================
+validation:
+  # Contract validation rules
+  contract_validation:
+    require_schema: true                    # Require schema definition in contracts
+    require_tags: true                      # Require tags in contracts
+    require_domain: true                    # Require domain specification
+    require_retention: false                # Require retention policy
+  
+  # Environment validation
+  environment_validation:
+    require_server_config: true             # Require server configuration
+    validate_s3_paths: true                 # Validate S3 path accessibility
+    check_permissions: false                # Check OpenMetadata permissions
+
+# =============================================================================
+# EXAMPLE ENVIRONMENT VARIABLES (SET THESE BEFORE RUNNING)
+# =============================================================================
+# export OPENMETADATA_JWT_TOKEN="your-jwt-token-here"
+# export AWS_ACCESS_KEY_ID="your-aws-access-key"
+# export AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
+# export TARGET_ENVIRONMENT="dev"
+# export LOG_LEVEL="INFO"

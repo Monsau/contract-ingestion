@@ -1,0 +1,194 @@
+apiVersion: v3.0.0
+kind: DataContract
+id: db8aab17-b9db-4b93-92c1-5f95f07fe32c
+name: Asset Sharp Production Forecasts Sourcing Contract for Assets Volumes
+version: 1.1.0
+domain: Asset Management
+status: ongoing
+team:
+- username: davit.pogosian@enovos.eu
+  role: data_steward
+  dateIn: 2025-03-01
+- username: jesu.balan@enovos.eu
+  role: data_reliability_engineer
+  dateIn: 2025-03-01
+roles:
+- role: data_owner
+  access: write
+  firstLevelApprovers: Reporting Manager
+  name: role_1
+- role: data_steward
+  access: write
+  firstLevelApprovers: Reporting Manager
+  name: role_2
+- role: data_analyst
+  access: read
+  firstLevelApprovers: Reporting Manager
+  name: role_3
+- role: data_scientist
+  access: read
+  firstLevelApprovers: Reporting Manager
+  name: role_4
+- role: data_architect
+  access: read
+  firstLevelApprovers: Reporting Manager
+  name: role_5
+- role: data_engineer
+  access: read
+  firstLevelApprovers: Reporting Manager
+  secondLevelApprovers: data_engineer
+  name: role_6
+- role: data_reliability_engineer
+  access: read
+  firstLevelApprovers: Reporting Manager
+  name: role_7
+servers:
+- server: eventsStorage
+  type: s3
+  format: json
+  delimiter: array
+  location: s3://eno-dm-bronze-prd/emsys/forecasts/2025/*/*/*.json
+  description: S3 storage service for event records
+  environment: prod
+- server: eventsStorage-uat
+  type: s3
+  format: json
+  delimiter: array
+  location: s3://eno-dm-bronze-uat/emsys/forecasts/2025/*/*/*.json
+  description: S3 storage service for event records
+  environment: uat
+schema:
+- name: time_series
+  physicalType: array
+  description: Array of forecast time series entries.
+  required: true
+  items:
+    physicalType: object
+    properties:
+    - name: key
+      physicalType: object
+      description: Metadata key for the time series entry.
+      required: true
+      properties:
+      - name: entity_id
+        physicalType: string
+        description: Unique identifier for the entity (e.g., a UUID).
+        required: true
+        criticalDataElement: true
+        examples:
+        - 29a70572-6c67-4009-9b39-2bbba4dc2494
+        - d7f8b1a9-9004-4878-ba1d-f59445a9f46a
+      - name: type_id
+        physicalType: string
+        description: Type of forecast (always "wind-forecast-real").
+        required: true
+        criticalDataElement: true
+        examples:
+        - pv-forecast-real
+        - wind-forecast-real
+      - name: bucket_id
+        physicalType: string
+        description: Bucket or system identifier (always "emsys").
+        required: true
+        criticalDataElement: true
+        examples:
+        - emsys
+        - default
+    - name: request_index
+      physicalType: integer
+      description: Index of the forecast request (0 or 1).
+      required: true
+      criticalDataElement: false
+      examples:
+      - 0
+      - 99
+    - name: column_ids
+      physicalType: array
+      description: Name of the columns sorted by the order of underlying data.
+      required: true
+      uniqueItems: true
+      criticalDataElement: true
+      examples:
+      - - timestamp_begin
+        - timestamp_end
+        - version
+        - pinst_installed
+        - power_rated
+      items:
+        physicalType: string
+        quality:
+        - rule: validValues
+          validValues:
+          - timestamp_begin
+          - timestamp_end
+          - version
+          - pinst_installed
+          - power_rated
+    - name: units
+      physicalType: array
+      description: Units sorted by the order of underlying data.
+      required: true
+      criticalDataElement: true
+      examples:
+      - - ms
+        - ms
+        - ms
+        - kW
+        - kW
+      items:
+        physicalType: string
+        quality:
+        - rule: validValues
+          validValues:
+          - ms
+          - kW
+    - name: values
+      physicalType: array
+      description: Columnar time series data values; one array per column.
+      required: true
+      items:
+        physicalType: array
+        description: Values for a single column across time steps.
+        items:
+          physicalType: number
+  classification: public
+  quality:
+  - rule: nullCheck
+    description: required column should not contain null values
+    dimension: completeness
+    severity: error
+    businessImpact: operational
+    schedule: before data overwrite
+  - rule: valueCheck
+    description: column should not contain incorrect values
+    dimension: accuracy
+    severity: error
+    businessImpact: operational
+    schedule: before data overwrite
+    customProperties:
+    - property: entity_id
+      value: should appear in base data
+  type: table
+slaProperties:
+- property: generalAvailability
+  value: '2032-05-12T09:30:10-08:00'
+- property: endOfSupport
+  value: '2032-05-12T09:30:10-08:00'
+- property: endOfLife
+  value: '2042-05-12T09:30:10-08:00'
+- property: retention
+  value: 5
+  unit: y
+- property: latency
+  value: 5
+  unit: m
+  environment: production
+- property: timeOfAvailability
+  value: 00:00-00:00
+  environment: production
+tags:
+- Asset
+- forecast
+- Volume
+contractCreatedTs: '2025-02-10T12:59:43+00:00'
+type: table

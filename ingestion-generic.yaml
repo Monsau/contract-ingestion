@@ -1,0 +1,771 @@
+# =====================================================
+# GENERIC CONTRACT-BASED INGESTION CONFIGURATION
+# =====================================================
+# Version: 3.0.0
+# Compatible with: OpenMetadata 1.8.2+
+# Purpose: Generic contract-based data ingestion and quality testing
+# Documentation: See GENERIC_VERSION_README.md
+
+# =====================================================
+# METADATA & TEMPLATE INFORMATION
+# =====================================================
+template:
+  name: "generic-contract-ingestion"
+  version: "3.0.0"
+  description: "Generic template for contract-based data ingestion into OpenMetadata"
+  author: "Data Engineering Team"
+  created: "2025-09-09"
+  openmetadata_version: "1.8.2"
+  
+# =====================================================
+# OPENMETADATA CONNECTION SETTINGS
+# =====================================================
+openmetadata:
+  # Connection details
+  host: "localhost"
+  port: 8585
+  protocol: "http"
+  api_version: "v1"
+  
+  # Authentication - Use environment variable for security
+  # Set OPENMETADATA_JWT_TOKEN in your .env file
+  jwt_token: "${OPENMETADATA_JWT_TOKEN}"
+  
+  # Connection options
+  verify_ssl: false
+  timeout: 30
+  retry_attempts: 3
+
+# =====================================================
+# SOURCE DATA CONFIGURATION
+# =====================================================
+source:
+  # Source type and location
+  type: "contracts"
+  contracts_directory: "contracts"
+  
+  # Environment settings
+  # Target environment for deployment
+  target_environment: "DEV"  # Options: DEV, UAT, PROD
+  
+  # Contract file patterns
+  file_patterns:
+    - "*.yaml"
+    - "*.yml"
+  
+  # Processing options
+  recursive_scan: true
+  validate_contracts: true
+
+# =====================================================
+# SERVICE CONFIGURATION
+# =====================================================
+service:
+  # Service identification
+  name: "DataLake"
+  display: "Data Lake Service"
+  type: "Database"
+  description: "Generic data lake for contract-based data management and analytics"
+  
+  # Service metadata
+  tags:
+    - "data-lake"
+    - "contracts"
+    - "analytics"
+    - "metadata"
+  
+  # Connection configuration for the service
+  connection:
+    type: "CustomDatabase"
+    source_class: "metadata.ingestion.source.database.customdatabase.source.CustomDatabaseSource"
+    connection_options: {}
+    connection_arguments: {}
+
+# =====================================================
+# DOMAIN STRUCTURE CONFIGURATION
+# =====================================================
+# DOMAIN STRUCTURE CONFIGURATION
+# =====================================================
+domain:
+  # Root domain settings
+  root_name: "DataManagement"
+  root_display: "Data Management Domain"
+  description: "Root domain for contract-based data management and analytics"
+  domain_type: "Aggregate"
+  
+  # Sub-domains (auto-created from contracts if not specified)
+  sub_domains:
+    events:
+      name: "EventData"
+      display: "Event Data"
+      description: "Event-driven data streams and processing"
+    
+    analytics:
+      name: "AnalyticsData" 
+      display: "Analytics Data"
+      description: "Analytics and reporting data assets"
+    
+    operational:
+      name: "OperationalData"
+      display: "Operational Data"
+      description: "Operational monitoring and metrics data"
+
+# =====================================================
+# DATABASE SCHEMA STRUCTURE
+# =====================================================
+database_structure:
+  # Default database name
+  name: "contract_data"
+  display: "Contract Data Layer"
+  description: "Certified data layer containing contract-based data"
+  
+# =====================================================
+# TAG CATEGORIES & CONFIGURATION
+# =====================================================
+tags:
+  categories:
+    Certification:
+      name: "Certification"
+      description: "Data certification and quality level tags"
+      color: "#1890FF"
+      tags:
+        bronze:
+          name: "bronze"
+          description: "Bronze level - Raw data validated and certified for ingestion"
+        silver:
+          name: "silver"
+          description: "Silver level - Cleaned and processed data that meets quality standards"
+        gold:
+          name: "gold"
+          description: "Gold level - Business-ready data certified for production use"
+        contracts:
+          name: "contracts"
+          description: "Data sourced from contract definitions"
+        RawCertified:
+          name: "RawCertified"
+          description: "Raw data validated and certified for ingestion"
+        ProcessedCertified:
+          name: "ProcessedCertified"
+          description: "Cleaned and processed data that meets quality standards"
+        BusinessCertified:
+          name: "BusinessCertified"
+          description: "Business-ready data certified for production use"
+      
+    DataQuality:
+      name: "DataQuality"
+      description: "Data quality and validation tags"
+      color: "#52C41A"
+      tags:
+        Validated:
+          name: "Validated"
+          description: "Data that has passed validation checks"
+        Pending:
+          name: "Pending"
+          description: "Data pending quality validation"
+        Issues:
+          name: "Issues"
+          description: "Data with quality issues identified"
+    
+    BusinessDomain:
+      name: "BusinessDomain"
+      description: "Business domain classification"
+      color: "#722ED1"
+      tags:
+        EventStreaming:
+          name: "EventStreaming"
+          description: "Event streaming and real-time data"
+        Analytics:
+          name: "Analytics"
+          description: "Analytics and reporting data"
+        Monitoring:
+          name: "Monitoring"
+          description: "System and operational monitoring"
+
+# =====================================================
+# AWS CONFIGURATION
+# =====================================================
+# aws:
+#   # AWS credentials - Use environment variables for security
+#   access_key_id: "${AWS_ACCESS_KEY_ID}"
+#   secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+#   session_token: "${AWS_SESSION_TOKEN}"  # Optional
+#   region: "eu-west-1"
+#   
+#   # S3 Configuration
+#   s3:
+#     bucket: "data-lake-bucket"
+#     prefix: "raw-data/"
+#     
+#   # Additional AWS services (optional)
+#   glue:
+#     enabled: false
+#     catalog_name: "data_catalog"
+#     
+#   athena:
+#     enabled: false
+#     workgroup: "data_workgroup"
+
+# =====================================================
+# QUALITY TESTING CONFIGURATION
+# =====================================================
+quality_testing:
+  # Global settings
+  enabled: true
+  sdk_fallback: true
+  
+  # Test suite configuration
+  test_suite:
+    name: "data_quality_test_suite"
+    display: "Data Quality Test Suite"
+    description: "Comprehensive data quality tests for contract-based data"
+  
+  # Test categories to create
+  test_types:
+    completeness: 
+      enabled: true
+      missing_count_threshold: 0
+      
+    uniqueness:
+      enabled: true
+      apply_to_id_columns: true
+      
+    length_validation:
+      enabled: true
+      string_length_limits:
+        min: 1
+        max: 1000
+        
+    custom_contract_tests:
+      enabled: true
+      validate_against_schema: true
+      
+    data_freshness:
+      enabled: false
+      max_age_hours: 24
+      
+    numerical_ranges:
+      enabled: false
+      validate_min_max: true
+  
+  # Test execution settings
+  execution:
+    auto_execute: false
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    timeout_minutes: 30
+
+# =====================================================
+# CONTRACT MAPPING CONFIGURATION
+# =====================================================
+contracts:
+  # Mapping contract files to table names (examples)
+  mappings:
+    # Example contract mappings - customize based on your contracts
+    "user_event.yaml": "user_events"
+    "order_event.yaml": "order_events"
+    "payment_event.yaml": "payment_events"
+    "system_metric.yaml": "system_metrics"
+  
+  # Contract validation rules
+  validation:
+    require_properties: true
+    require_description: true
+    validate_data_types: true
+    
+  # Table naming conventions
+  naming:
+    prefix: ""
+    suffix: ""
+    case_style: "snake_case"  # Options: snake_case, camelCase, kebab-case
+
+# =====================================================
+# TEAM & OWNERSHIP CONFIGURATION
+# =====================================================
+teams:
+  # Default team for data resources
+  default_team:
+    name: "data_engineering_team"
+    display: "Data Engineering Team"
+    description: "Team responsible for data pipeline management"
+    email: "data-engineering@company.com"
+    
+  # Additional teams (optional)
+  additional_teams:
+    engineering:
+      name: "platform_engineering"
+      display: "Platform Engineering"
+      description: "Platform and infrastructure engineering team"
+      
+    analytics:
+      name: "data_analytics"
+      display: "Data Analytics"
+      description: "Data analytics and business intelligence team"
+
+# =====================================================
+# LOGGING CONFIGURATION
+# =====================================================
+logging:
+  # Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging (optional)
+  file:
+    enabled: false
+    path: "logs/ingestion.log"
+    max_size_mb: 100
+    backup_count: 5
+    
+  # Console logging
+  console:
+    enabled: true
+    colored: true
+
+# =====================================================
+# PROCESSING CONFIGURATION
+# =====================================================
+processing:
+  # Batch processing settings
+  batch_size: 100
+  parallel_processing: false
+  max_workers: 4
+  
+  # Retry and timeout settings
+  retry_attempts: 3
+  timeout_seconds: 30
+  backoff_factor: 2
+  
+  # Memory and performance
+  memory_limit_mb: 1024
+  cache_enabled: true
+
+# =====================================================
+# OUTPUT CONFIGURATION
+# =====================================================
+output:
+  # Report generation
+  generate_reports: true
+  report_directory: "reports"
+  report_format: "markdown"  # Options: markdown, json, html
+  
+  # Test results
+  create_test_results: true
+  test_results_directory: "test_results"
+  
+  # Artifacts
+  save_artifacts: true
+  artifacts_directory: "artifacts"
+
+# =====================================================
+# FEATURE FLAGS
+# =====================================================
+features:
+  # Core features
+  sdk_integration: true
+  api_fallback: true
+  test_execution: true
+  
+  # Optional features
+  sample_data_creation: false
+  lineage_tracking: false
+  profiling: false
+  
+  # Experimental features
+  auto_classification: false
+  ml_suggestions: false
+
+# =====================================================
+# SECURITY SETTINGS
+# =====================================================
+security:
+  # SSL/TLS settings
+  verify_ssl: true
+  ssl_cert_path: null
+  
+  # Token management
+  token_refresh: false
+  token_expiry_check: true
+  
+  # Data masking (for sensitive data)
+  data_masking:
+    enabled: false
+    patterns:
+      - "email"
+      - "ssn"
+      - "credit_card"
+
+# =====================================================
+# ENVIRONMENT-SPECIFIC OVERRIDES
+# =====================================================
+environments:
+  dev:
+    openmetadata:
+      host: "localhost"
+      port: 8585
+      protocol: "http"
+      verify_ssl: false
+      jwt_token: "eyJraWQiOiJHYjM4OWEtOWY3Ni1nZGpzLWE5MmotMDI0MmJrOTQzNTYiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvcGVuLW1ldGFkYXRhLm9yZyIsInN1YiI6ImdlbmVyaWMtaW5nZXN0aW9uLWJvdCIsInJvbGVzIjpbXSwiZW1haWwiOiJnZW5lcmljLWluZ2VzdGlvbi1ib3RAdGFsZW50eXMuZXUiLCJpc0JvdCI6dHJ1ZSwidG9rZW5UeXBlIjoiQk9UIiwiaWF0IjoxNzU4MTM2NTI4LCJleHAiOm51bGx9.Hy4ed-YPdwKeZ71viL1G2JmQzo-gSdfa7MiKGj8ujgx4znEjuzFqRl15mhqsKjhSjnU-f6v_IV1Qe5kcxxaKScxq3HPPGF6snl2CgZBPXCu9QhSDQBLZO5FIY-vy8h9iLQXOYNoYj79-y7Xqu82O15vLpzHjh4_fOXJ59X0_oiq3NpIrv8eUv93K-nFqDwNPF00SwykEuoRcYNnhWueOy8e_MVkWv66kT74YKqS-iS-c6w18i0YXNnkUwt_RvzMf7-ZI6xuSV7A6xrWdFpC_2rIUJluBR2BWooLwDaA578KkjX8Rqe8VLA2vIBJlKw97Q1JY0a34lRGCiIk2HJBVHQ"
+      
+    data_retention:
+      default_retention_days: 7
+      cleanup:
+        enabled: true
+        
+    logging:
+      level: "DEBUG"
+      console:
+        colored: true
+        
+    processing:
+      timeout_seconds: 60
+      
+    quality_testing:
+      enabled: true
+      
+    features:
+      sample_data_creation: true
+      sample_data_loading: true
+      test_case_creation: false
+      
+  staging:
+    openmetadata:
+      host: "staging-openmetadata"
+      
+    logging:
+      level: "INFO"
+      
+    quality_testing:
+      enabled: true
+      execution:
+        auto_execute: false
+        
+  uat:
+    openmetadata:
+      host: "datacatalog.private.uat.enocloud.eu"
+      port: 443
+      protocol: "https"
+      verify_ssl: true
+      jwt_token: "eyJraWQiOiJHYjM4OWEtOWY3Ni1nZGpzLWE5MmotMDI0MmJrOTQzNTYiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvcGVuLW1ldGFkYXRhLm9yZyIsInN1YiI6ImVub2RlLWluZ2VzdGlvbi1ib3QiLCJyb2xlcyI6W10sImVtYWlsIjoiZW5vZGUtaW5nZXN0aW9uLWJvdEB0YWxlbnR5c3MuZXUiLCJpc0JvdCI6dHJ1ZSwidG9rZW5UeXBlIjoiQk9UIiwiaWF0IjoxNzU3NTg0NzQ3LCJleHAiOm51bGx9.gF2sE9yrU_pRDDxF_-Mncx5BlGtg4HIO0LvfQPUa9DNA1fS6-C1UOEhDwMkZJqs8_1bnUxpdAMjm0QJzKc9329TG3WG43s6bB2b6U-7s_7dISMU4Xn6G6w1DuBsKsw1Yjtmekd3JeVMcZNB7BMw_Dkxo1S7YWNzHeG0BTzk4O0fj9XnRMeiWbNvdE76bGJ7SPBzyynQjTihN2x_kxxgXTaJ9KnoEpDT_wvejBNg_xglPixvjCjc_f2Ugz9EQI8ZboyrG6xoMUL-JSemsoxKemHOT3ewutR0BYas0s0LtGu7xJkWxus7nTsUTrx7VygUcAocYe-kOhcJ6ThO8itjyqQ"
+    
+    data_retention:
+      default_retention_days: 7
+      cleanup:
+        enabled: true
+        
+    logging:
+      level: "INFO"
+      console:
+        colored: true
+      file:
+        enabled: true
+        
+    processing:
+      timeout_seconds: 120
+      retry_attempts: 3
+      
+    quality_testing:
+      enabled: true
+      execution:
+        auto_execute: true
+        
+    features:
+      sample_data_creation: true
+      comprehensive_tagging: true
+      test_case_creation: false
+      
+    security:
+      token_expiry_check: false
+      data_masking:
+        enabled: false
+        
+  prod:
+    openmetadata:
+      host: "datacatalog.private.prod.enocloud.eu"
+      port: 443
+      protocol: "https"
+      verify_ssl: true
+      timeout: 60
+      retry_attempts: 5
+      jwt_token: "${OPENMETADATA_JWT_TOKEN}"
+
+    data_retention:
+      default_retention_days: 7
+      policies:
+        sample_data:
+          retention_days: 7
+        test_results:
+          retention_days: 7
+        profiling_data:
+          retention_days: 7
+        logs:
+          retention_days: 7
+        artifacts:
+          retention_days: 7
+      cleanup:
+        enabled: true
+        schedule: "0 3 * * *"  # Daily at 3 AM
+
+    logging:
+      level: "INFO"  # Changed from WARNING to INFO for better observability
+      console:
+        colored: false  # Disable colors in production logs
+      file:
+        enabled: true
+        path: "logs/production_ingestion.log"
+        max_size_mb: 500
+        backup_count: 10
+
+    security:
+      token_expiry_check: true
+      data_masking:
+        enabled: true
+        patterns:
+          - "email"
+          - "ssn"
+          - "credit_card"
+          - "phone"
+          - "address"
+
+    processing:
+      batch_size: 200  # Larger batches for production efficiency
+      retry_attempts: 5
+      timeout_seconds: 300  # Longer timeout for production stability
+      parallel_processing: true
+      max_workers: 8
+      backoff_factor: 3
+      memory_limit_mb: 4096
+
+    quality_testing:
+      enabled: true
+      execution:
+        auto_execute: true
+        schedule: "0 1 * * *"  # Daily at 1 AM
+        timeout_minutes: 120
+      test_types:
+        completeness:
+          enabled: true
+          missing_count_threshold: 0
+        uniqueness:
+          enabled: true
+        data_freshness:
+          enabled: true
+          max_age_hours: 48
+        numerical_ranges:
+          enabled: true
+
+    features:
+      sample_data_creation: false  # Disabled in production
+      comprehensive_tagging: true
+      test_case_creation: true
+      lineage_tracking: true
+      profiling: true
+      auto_classification: true
+
+    monitoring:
+      health_checks:
+        enabled: true
+        interval_minutes: 2
+      metrics:
+        enabled: true
+      alerts:
+        enabled: true
+      performance:
+        track_execution_time: true
+        memory_monitoring: true
+
+    backup:
+      config_backup:
+        enabled: true
+        retention_days: 90
+      data_backup:
+        enabled: true
+        retention_days: 365# =====================================================
+# MONITORING & ALERTING
+# =====================================================
+monitoring:
+  # Health checks
+  health_checks:
+    enabled: true
+    interval_minutes: 5
+    
+  # Metrics collection
+  metrics:
+    enabled: false
+    endpoint: "http://prometheus:9090"
+    
+  # Alerting
+  alerts:
+    enabled: false
+    webhook_url: "https://hooks.slack.com/services/..."
+    
+  # Performance monitoring
+  performance:
+    track_execution_time: true
+    memory_monitoring: true
+
+# =====================================================
+# DATA RETENTION CONFIGURATION
+# =====================================================
+data_retention:
+  # Default retention period for data assets
+  default_retention_days: 7
+  
+  # Retention policies by data type
+  policies:
+    sample_data:
+      retention_days: 7
+      description: "Sample data retention for tables and testing"
+    
+    test_results:
+      retention_days: 7
+      description: "Data quality test results retention"
+    
+    profiling_data:
+      retention_days: 7
+      description: "Data profiling results retention"
+    
+    logs:
+      retention_days: 7
+      description: "Application and processing logs retention"
+    
+    artifacts:
+      retention_days: 7
+      description: "Processing artifacts and temporary files retention"
+  
+  # Automatic cleanup settings
+  cleanup:
+    enabled: true
+    schedule: "0 3 * * *"  # Daily at 3 AM
+    dry_run: false  # Set to true to test without actually deleting
+
+# =====================================================
+# BACKUP & RECOVERY
+# =====================================================
+backup:
+  # Configuration backup
+  config_backup:
+    enabled: false
+    directory: "backups"
+    retention_days: 30
+    
+  # Data backup
+  data_backup:
+    enabled: false
+    # s3_bucket: "data-backups"  # Not needed - using contract-specific paths
+    retention_days: 90
+
+# =====================================================
+# OPERATIONS CONFIGURATION
+# =====================================================
+operations:
+  # Default operation mode (ingestion, metadata, lineage, profiling, test)
+  default_mode: "test"
+  
+  # Available operations
+  modes:
+    ingestion:
+      enabled: true
+      description: "Full data ingestion and metadata creation"
+      includes:
+        - "services"
+        - "databases" 
+        - "schemas"
+        - "tables"
+        - "columns"
+        - "tags"
+        - "domains"
+        - "teams"
+        - "users"
+        - "tests"
+        - "test_cases"
+        - "data_products"
+        - "lineage"
+        - "profiling"
+        - "quality"
+        - "retention"
+      
+    metadata:
+      enabled: true
+      description: "Metadata-only operations (no data ingestion)"
+      includes:
+        - "services"
+        - "databases"
+        - "schemas" 
+        - "tables"
+        - "columns"
+        
+    lineage:
+      enabled: true
+      description: "Data lineage mapping and relationship creation"
+      includes:
+        - "table_lineage"
+        - "column_lineage"
+        - "pipeline_lineage"
+        
+    profiling:
+      enabled: true  
+      description: "Data profiling and quality metrics"
+      includes:
+        - "column_profiling"
+        - "table_profiling"
+        - "data_quality_checks"
+        
+    test:
+      enabled: true
+      description: "Data quality testing and validation"
+      includes:
+        - "quality_tests"
+        - "schema_validation"
+        - "data_validation"
+      # OpenMetadata integration for test cases and results
+      create_openmetadata_tests: true     # Create test cases in OpenMetadata
+      save_results_to_openmetadata: true  # Save test results to OpenMetadata
+      s3_testing:
+        enabled: true  # Enable this when S3 is configured
+        max_files_per_contract: 20
+        test_actual_data: true
+        s3_connection:
+          region: "eu-west-1"
+          # Default bucket for contract data - configure this for your environment
+          # default_bucket: "your-data-lake-bucket"  # Not needed - using contract-specific paths
+          # Base prefix for contract data
+          # base_prefix: "raw-data"  # Not needed - using contract-specific paths
+          # S3 credentials will be read from environment or AWS profile
+        
+    monitoring:
+      enabled: false
+      description: "Operational monitoring and alerting"
+      includes:
+        - "metrics_collection"
+        - "health_checks"
+        - "alerting"
+
+# =====================================================
+# CUSTOM EXTENSIONS
+# =====================================================
+extensions:
+  # Custom processors
+  processors: []
+  
+  # Custom validators
+  validators: []
+  
+  # Custom transformers
+  transformers: []
+  
+  # Hooks
+  hooks:
+    pre_ingestion: []
+    post_ingestion: []
+    on_error: []
+
+# =====================================================
+# TEMPLATE USAGE INSTRUCTIONS
+# =====================================================
+# 1. Copy this file to your project directory
+# 2. Create .env file from .env.template
+# 3. Set environment variables (OPENMETADATA_JWT_TOKEN, AWS credentials)
+# 4. Customize configuration sections as needed
+# 5. Run: python contract_ingestion.py --config ingestion-enode.yaml
+# 6. Use --verbose flag for detailed logging
+# 7. Check reports/ directory for ingestion results
+# =====================================================

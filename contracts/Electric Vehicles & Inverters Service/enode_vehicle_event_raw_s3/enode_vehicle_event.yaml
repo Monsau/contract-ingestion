@@ -1,0 +1,515 @@
+apiVersion: v3.0.2
+kind: DataContract
+id: c4fb7f28-cd18-47e6-819b-2e607e558b42
+version: 1.0.0
+status: active
+domain: Data Contract for Electric Vehicles Events
+dataProduct: EnodeVehicleEventBronze
+tenant: Enovos
+description:
+  purpose: "This contract defines the data schema, service infrastructure, and service level agreements for a S3 service managing data for electric vehicles events."
+  usage: "Data available for analytics"
+  
+servers:
+  - server: eventsStorage
+    type: s3
+    format: json
+    delimiter: array
+    location: s3://eno-dm-bronze-prd/enode/landing/*/*/*/vehicleEvents-*.json
+    description: "S3 storage service for event records"
+    environment: production
+  - server: eventsStorage-uat
+    type: s3
+    format: json
+    delimiter: array
+    location: s3://eno-dm-bronze-uat/enode/landing/*/*/*/vehicleEvents-*.json
+    description: "S3 storage service for event records"
+    environment: uat
+
+schema:
+  - name: VehicleUpdatedEvent
+    logicalType: object
+    physicalType: object
+    description: "Event emitted when a user’s vehicle state is updated."
+    properties:
+      - name: createdAt
+        logicalType: date
+        description: "Timestamp when the event was created."
+        required: true
+        examples:
+          - "2020-04-07T17:04:26Z"
+        quality:
+          - rule: timestampFormat
+            type: library
+            description: "Value must adhere to the ISO8601 format."
+            parameters:
+              expectedFormat: "YYYY-MM-DDTHH:mm:ssZ"
+
+      - name: version
+        businessName: "Event Version"
+        logicalType: string
+        physicalType: string
+        description: "Version of the event schema."
+        required: true
+        examples:
+          - "2024-10-01"
+        quality:
+          - rule: nonEmpty
+            type: library
+            description: "Version must not be empty."
+            parameters:
+              minLength: 1
+
+      - name: user
+        logicalType: object
+        physicalType: object
+        description: "Reference to the user who owns the vehicle."
+        required: true
+        properties:
+          - name: id
+            logicalType: string
+            physicalType: uuid
+            description: "Unique user identifier."
+            required: true
+            examples:
+              - "string"
+        quality:
+          - rule: jsonStructure
+            type: library
+            description: "Must be a valid JSON object containing required keys."
+            parameters:
+              requiredKeys: ["id"]
+              
+      - name: event
+        logicalType: string
+        physicalType: string
+        description: "Type of event."
+        required: true
+        quality:
+          - rule: validValues
+            validValues:
+              - "user:vehicle:updated"
+              - "user:vehicle:discovered"
+              - "user:vehicle:deleted"
+            severity: error
+      - name: vehicle
+        logicalType: object
+        physicalType: object
+        description: "Details and state of the updated vehicle."
+        required: true
+        quality:
+          - rule: jsonStructure
+            type: library
+            description: "If provided, must conform to the expected vehicle schema."
+            parameters:
+              requiredKeys: ["id", "userId", "vendor", "lastSeen", "isReachable", "information"]
+        properties:
+          - name: id
+            logicalType: string
+            physicalType: uuid
+            description: "Unique vehicle identifier."
+            required: true
+            examples:
+              - "05ee9df5-d072-4ee8-b773-399dec8f5693"
+
+          - name: userId
+            logicalType: string
+            physicalType: uuid
+            description: "Identifier of the user to whom the vehicle belongs."
+            required: true
+            examples:
+              - "bb28471e-cde6-4eff-ace4-9a7f4f50882a"
+
+          - name: vendor
+            logicalType: string
+            physicalType: string
+            description: "Vehicle manufacturer."
+            required: true
+            examples:
+              - "TESLA"
+
+          - name: lastSeen
+            logicalType: string
+            physicalType: date-time
+            description: "Last time the vehicle was seen online."
+            required: true
+            examples:
+              - "2024-01-07T17:04:26.000Z"
+
+          - name: isReachable
+            logicalType: boolean
+            physicalType: boolean
+            description: "Whether the vehicle is currently reachable."
+            required: true
+            examples:
+              - true
+
+          - name: information
+            logicalType: object
+            physicalType: object
+            description: "Static vehicle metadata."
+            required: true
+            quality:
+              - rule: jsonStructure
+                type: library
+                description: "If provided, must conform to the expected schema."
+                parameters:
+                  requiredKeys: ["vin", "brand", "model", "year", "displayName"]
+            properties:
+              - name: vin
+                logicalType: string
+                physicalType: string
+                description: "Vehicle Identification Number."
+                required: true
+                examples:
+                  - "2HGFB2F5XEH542858"
+              - name: brand
+                logicalType: string
+                physicalType: string
+                description: "Brand name."
+                required: true
+                examples:
+                  - "string"
+              - name: model
+                logicalType: string
+                physicalType: string
+                description: "Model name."
+                required: true
+                examples:
+                  - "Model S P85"
+              - name: year
+                logicalType: integer
+                physicalType: integer
+                description: "Manufacture year."
+                required: true
+                examples:
+                  - 2020
+              - name: displayName
+                logicalType: string
+                physicalType: string
+                description: "User-defined display name."
+                required: true
+                examples:
+                  - "Batmobile"
+
+          - name: chargeState
+            logicalType: object
+            physicalType: object
+            description: "Current charging state of the vehicle."
+            required: true
+            quality:
+              - rule: jsonStructure
+                type: library
+                description: "If provided, must conform to the expected schema."
+                parameters:
+                  requiredKeys: ["batteryLevel", "range", "isPluggedIn", "year", "isCharging", "isFullyCharged", "batteryCapacity", "chargeLimit", "chargeRate", "chargeTimeRemaining", "lastUpdated", "maxCurrent", "powerDeliveryState"]
+            properties:
+              - name: batteryLevel
+                logicalType: integer
+                physicalType: integer
+                description: "Battery level percentage."
+                required: true
+                examples:
+                  - 66
+              - name: range
+                logicalType: integer
+                physicalType: integer
+                description: "Estimated driving range (km)."
+                required: true
+                examples:
+                  - 228
+              - name: isPluggedIn
+                logicalType: boolean
+                physicalType: boolean
+                description: "Whether the vehicle is plugged in."
+                required: true
+                examples:
+                  - true
+              - name: isCharging
+                logicalType: boolean
+                physicalType: boolean
+                description: "Whether charging is in progress."
+                required: true
+                examples:
+                  - true
+              - name: isFullyCharged
+                logicalType: boolean
+                physicalType: boolean
+                description: "Whether the battery is fully charged."
+                required: true
+                examples:
+                  - false
+              - name: batteryCapacity
+                logicalType: number
+                physicalType: decimal
+                description: "Total battery capacity (kWh)."
+                required: true
+                examples:
+                  - 48.1
+              - name: chargeLimit
+                logicalType: integer
+                physicalType: integer
+                description: "Configured charge limit (%)."
+                required: true
+                examples:
+                  - 90
+              - name: chargeRate
+                logicalType: number
+                physicalType: decimal
+                description: "Current charge rate (kW)."
+                required: true
+                examples:
+                  - 2
+              - name: chargeTimeRemaining
+                logicalType: integer
+                physicalType: integer
+                description: "Estimated minutes until fully charged."
+                required: true
+                examples:
+                  - 285
+              - name: lastUpdated
+                logicalType: string
+                physicalType: date-time
+                description: "Timestamp of last update."
+                required: true
+                examples:
+                  - "2020-04-07T17:04:26Z"
+              - name: maxCurrent
+                logicalType: integer
+                physicalType: integer
+                description: "Maximum allowable charging current (A)."
+                required: true
+                examples:
+                  - 16
+              - name: powerDeliveryState
+                logicalType: string
+                physicalType: string
+                description: "The current state of power delivery between the vehicle and charger."
+                required: true
+                examples:
+                  - "PLUGGED_IN:CHARGING"
+                quality:
+                  - rule: validValues
+                    type: library
+                    description: "Value must be one of the predefined types."
+                    parameters:
+                      allowedValues:
+                        - "UNKNOWN"
+                        - "UNPLUGGED"
+                        - "PLUGGED_IN:INITIALIZING"
+                        - "PLUGGED_IN:CHARGING"
+                        - "PLUGGED_IN:COMPLETE"
+                        - "PLUGGED_IN:STOPPED"
+                        - "PLUGGED_IN:NO_POWER"
+                        - "PLUGGED_IN:FAULT"
+                        - "PLUGGED_IN:DISCHARGING"
+
+          - name: smartChargingPolicy
+            logicalType: object
+            physicalType: object
+            description: "User’s smart charging policy settings."
+            required: true
+            quality:
+              - rule: jsonStructure
+                type: library
+                description: "If provided, must conform to the expected schema."
+                parameters:
+                  requiredKeys: ["isEnabled", "deadline", "minimumChargeLimit"]
+            properties:
+              - name: isEnabled
+                logicalType: boolean
+                physicalType: boolean
+                description: "Whether smart charging is enabled."
+                required: true
+                examples:
+                  - true
+              - name: deadline
+                logicalType: string
+                physicalType: string
+                description: "Charging deadline (HH:mm)."
+                required: true
+                examples:
+                  - "07:00"
+              - name: minimumChargeLimit
+                logicalType: integer
+                physicalType: integer
+                description: "Minimum charge limit (%)."
+                required: true
+                examples:
+                  - 0
+
+          - name: odometer
+            logicalType: object
+            physicalType: object
+            description: "Odometer reading information."
+            required: true
+            properties:
+              - name: distance
+                logicalType: integer
+                physicalType: integer
+                description: "Total distance traveled (km)."
+                required: true
+                examples:
+                  - 65393
+              - name: lastUpdated
+                logicalType: string
+                physicalType: date-time
+                description: "Timestamp of last odometer update."
+                required: true
+                examples:
+                  - "2024-01-07T17:04:26.000Z"
+
+          - name: capabilities
+            logicalType: object
+            physicalType: object
+            description: "Supported interventions by capability area."
+            required: true
+            properties:
+              - name: information
+                logicalType: object
+                physicalType: object
+                required: true
+                properties:
+                  - name: isCapable
+                    logicalType: boolean
+                    physicalType: boolean
+                    required: true
+                    examples:
+                      - false
+                  - name: interventionIds
+                    logicalType: array
+                    physicalType: array
+                    description: "List of allowed intervention IDs."
+                    required: true
+                    items:
+                      logicalType: string
+                      physicalType: uuid
+
+              # (repeat for chargeState, location, odometer, setMaxCurrent, startCharging, stopCharging, smartCharging)
+
+          - name: scopes
+            logicalType: array
+            physicalType: array
+            description: "OAuth scopes granted for this vehicle."
+            required: true
+            minItems: 3
+            items:
+              logicalType: string
+              physicalType: string
+            examples:
+              - ["vehicle:control:charging","vehicle:read:data","vehicle:read:location"]
+
+          - name: location
+            logicalType: object
+            physicalType: object
+            description: "Last known GPS location of the vehicle."
+            required: true
+            properties:
+              - name: longitude
+                logicalType: number
+                physicalType: decimal
+                required: true
+                examples:
+                  - 10.7197486
+              - name: latitude
+                logicalType: number
+                physicalType: decimal
+                required: true
+                examples:
+                  - 59.9173985
+              - name: lastUpdated
+                logicalType: string
+                physicalType: date-time
+                required: true
+                examples:
+                  - "2024-01-07T17:04:26.000Z"
+              - name: id
+                logicalType: string
+                physicalType: uuid
+                required: true
+                examples:
+                  - "07f8368d-be7e-4dbd-8cf0-94d00dd67ad3"
+
+      - name: updatedFields
+        logicalType: array
+        physicalType: array
+        description: "List of fields that were updated in this event."
+        required: true
+        items:
+          logicalType: string
+          physicalType: string
+        examples:
+          - ["chargeState","location"]
+
+
+team:
+  - username: emma.korchia@enovos.eu
+    role: data_steward
+    dateIn: 2025-03-01
+  - username: jesu.balan@enovos.eu
+    role: data_reliability_engineer
+    dateIn: 2025-03-01
+
+
+roles:
+  - role: data_owner
+    access: write
+    firstLevelApprovers: Reporting Manager
+  - role: data_steward
+    access: write
+    firstLevelApprovers: Reporting Manager
+  - role: data_analyst
+    access: read
+    firstLevelApprovers: Reporting Manager
+  - role: data_scientist
+    access: read
+    firstLevelApprovers: Reporting Manager
+  - role: data_architect
+    access: read
+    firstLevelApprovers: Reporting Manager
+  - role: data_engineer
+    access: read
+    firstLevelApprovers: Reporting Manager
+    secondLevelApprovers: data_engineer
+  - role: data_reliability_engineer
+    access: read
+    firstLevelApprovers: Reporting Manager
+
+slaProperties:  
+  - property: uptime  
+    value: "99,95% provided by AWS SLAs, on internal OLAs"  
+  - property: maintenanceWindows  
+    value: "1h30pm-2h30pm"  
+  - property: responseTimes  
+    value: "500ms"  
+  - property: maxLoad  
+    value: "200 requests in parallel"  
+  - property: requestFrequency  
+    value: "10 requests per second"  
+  - property: supportHours  
+    value: "business hours"  
+  - property: responseTargets  
+    value: "defined by the degree of criticality of the accident,P1 to P4"  
+  - property: escalation  
+    value: "first level Integration team, Secondo level Head of Service Delivery"  
+
+customProperties:  
+  - property: accessControls  
+    value: "Only authorized users are allowed to view and modify data. Each access point is authenticated and audited."  
+  - property: encryption  
+    value: "All sensitive data transmitted to and from the servers will be encrypted using industry-standard protocols."  
+  - property: compliance  
+    value: "The system adheres to all applicable data protection regulations and standards."  
+  - property: dataRetention  
+    value: "Latest charging status, retrieved every 5 to 7 minutes and customer data retained for the entire time the customer is linked and deleted after 1 month after the link is revoked"  
+  - property: changeManagementProcess  
+    value: "Any updates to the database schema or modifications to the service levels must be communicated in advance to all stakeholders. Versioning and backward compatibility are maintained to ensure smooth transitions."  
+  - property: acceptanceTerms  
+    value: "By using the service, users agree to the terms of this data contract. Any changes to the contract will be provided with adequate notice and subject to user acceptance."  
+
+
+tags:
+  - Assets
+  - Vehicle
+
+contractCreatedTs: "2025-03-26T14:00:00Z"
