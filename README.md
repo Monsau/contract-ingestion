@@ -3,11 +3,37 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://python.org)
 [![OpenMetadata](https://img.shields.io/badge/OpenMetadata-1.8.2-green.svg)](https://open-metadata.org)
 [![AWS S3](https://img.shields.io/badge/AWS-S3-orange.svg)](https://aws.amazon.com/s3/)
-[![YAML](https://img.shields.io/badge/Config-YAML-red.svg)](https://yaml.org)
+[![Architecture](https://img.shields.io/badge/Architecture-Modular-brightgreen.svg)](docs/PROJECT_STRUCTURE.md)
 
-A comprehensive, enterprise-grade data contract ingestion system for OpenMetadata with advanced domain-driven design, automated metadata management, and S3 integration.
+A comprehensive, enterprise-grade data contract ingestion system for OpenMetadata with **clean modular architecture**, automated metadata management, and S3 integration.
 
-## 📋 Table of Contents
+## 📁 Clean Project Structure
+
+```
+ingestion-generic/
+├── main.py                          # 🎯 Main entry point (NEW)
+├── contract_ingestion.py           # 📦 Original implementation (backup)
+├── ingestion-generic.yaml          # ⚙️ Configuration file
+├── src/                            # 🏗️ Modular architecture (CLEAN)
+│   ├── handlers/                   # 🔧 Mode handlers
+│   │   ├── base_handler.py        # 🔗 Shared functionality  
+│   │   ├── ingestion_handler.py   # 📊 Full ingestion mode
+│   │   └── test_handler.py        # 🧪 Test and validation mode
+│   ├── client/                     # 🌐 OpenMetadata client
+│   │   └── omd_client.py          # 🔌 API client
+│   └── utils/                      # 🛠️ Utilities  
+│       ├── config.py              # ⚙️ Configuration management
+│       ├── sdk.py                 # 🔧 SDK utilities
+│       └── s3_client.py           # ☁️ S3 integration
+├── contracts/                      # 📄 Contract definitions
+├── docs/                          # 📚 Documentation (UPDATED)
+│   ├── PROJECT_STRUCTURE.md      # 🏗️ Architecture overview
+│   ├── REFACTORING_SUMMARY.md    # 📋 Refactoring details  
+│   └── CLEANUP_SUMMARY.md        # 🧹 Cleanup documentation
+└── test_results/                  # 📈 Test results
+```
+
+## ⚡ Quick Start (Updated Entry Point)
 
 - [🎯 Features](#-features)
 - [🏗️ Architecture Overview](#️-architecture-overview)
@@ -150,17 +176,26 @@ export AWS_SECRET_ACCESS_KEY="your-secret-key"
 export TARGET_ENVIRONMENT="dev"  # or 'uat', 'prod'
 ```
 
-### 3. Basic Execution
+### 3. Run the System (Clean Architecture)
 
 ```bash
-# Full ingestion with all components
-python contract_ingestion.py
+# Test configuration and connection - NEW ENTRY POINT
+python main.py --mode dry-run
 
-# Specific operations
-python contract_ingestion.py --mode catalog    # Metadata only
-python contract_ingestion.py --mode testing    # Testing only
-python contract_ingestion.py --mode profiling  # Data profiling
+# Execute data quality tests  
+python main.py --mode test
+
+# Full metadata ingestion
+python main.py --mode ingestion
+
+# Other modes (lineage, profiling, monitoring)
+python main.py --mode lineage
+python main.py --mode profiling  
+python main.py --mode monitoring
 ```
+
+> **✅ Project Status**: Cleaned and organized with modular architecture  
+> **📚 Documentation**: See [docs/CLEANUP_SUMMARY.md](docs/CLEANUP_SUMMARY.md) for cleanup details
 
 ## 🔧 Configuration
 
