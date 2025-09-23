@@ -68,12 +68,10 @@ class TestModeHandler(BaseHandler):
     def _is_another_server_running(self):
         """Check if another server is currently running operations"""
         try:
-            # Try to create a temporary marker to check for concurrent operations
-            response = self.client.session.get(
-                f"{self.client.base_url}/api/v1/system/version",
-                timeout=10
-            )
-            return response.status_code == 200
+            # For now, disable the multi-server check since we're running on a single instance
+            # This prevents false positives when the OpenMetadata API is simply responsive
+            # TODO: Implement proper distributed lock mechanism if running on multiple servers
+            return False
         except Exception:
             # If we can't check, assume no other server is running
             return False

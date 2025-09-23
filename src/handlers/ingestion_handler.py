@@ -7,6 +7,7 @@ import logging
 import os
 from pathlib import Path
 from typing import List, Any, Optional
+from dotenv import load_dotenv
 
 from src.handlers.base_handler import BaseHandler
 from src.utils.s3_client import S3SampleDataClient
@@ -28,6 +29,9 @@ class IngestionModeHandler(BaseHandler):
     def _init_s3_client(self):
         """Initialize S3 client with credentials"""
         try:
+            # Load environment variables from .env file
+            load_dotenv()
+            
             # AWS credentials from environment variables
             aws_credentials = {
                 'aws_access_key_id': os.getenv('AWS_ACCESS_KEY_ID'),

@@ -424,7 +424,7 @@ environments:
     features:
       sample_data_creation: true
       sample_data_loading: true
-      test_case_creation: false
+      test_case_creation: true
       
   staging:
     openmetadata:
@@ -470,8 +470,8 @@ environments:
     features:
       sample_data_creation: true
       comprehensive_tagging: true
-      test_case_creation: false
-      
+      test_case_creation: true
+
     security:
       token_expiry_check: false
       data_masking:
